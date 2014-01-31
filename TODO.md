@@ -29,4 +29,9 @@ Function list
 * formatPrice calls getCurrentCurrency which supposedly returns a string but
   method format() is called on it, so must be `Varien_String` or something.
 
+Finding calculations
+---
+
+`find app/code/core/Mage/ -exec pcregrep  -- '(?<!/)[/*+-] [$0-9]' {} +|less`
+
 

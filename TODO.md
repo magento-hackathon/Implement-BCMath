@@ -29,6 +29,10 @@ Function list
 * formatPrice calls getCurrentCurrency which supposedly returns a string but
   method format() is called on it, so must be `Varien_String` or something.
 
+`app/code/core/Mage/Directory/Model/Currency.php`:
+* convert()
+* Check rate related functions for any roundings based on db.
+
 Finding calculations
 ---
 

@@ -2,3 +2,7 @@
 .*.swp
 /media
 /var
+/downloader
+/LICENSE*
+*.sample
+/pkginfo

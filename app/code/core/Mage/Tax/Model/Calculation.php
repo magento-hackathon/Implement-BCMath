@@ -591,26 +591,54 @@ class Mage_Tax_Model_Calculation extends Mage_Core_Model_Abstract
      * Calculate rated tax abount based on price and tax rate.
      * If you are using price including tax $priceIncludeTax should be true.
      *
-     * @param   float $price
-     * @param   float $taxRate
+     * @param   mixed $price
+     * @param   mixed $taxRate
      * @param   boolean $priceIncludeTax
      * @param   boolean $round
-     * @return  float
+     * @return  string
      */
     public function calcTaxAmount($price, $taxRate, $priceIncludeTax = false, $round = true)
     {
-        $taxRate = $taxRate / 100;
+        /*
+         * Temporarily set scale to save on typing and to be consistent 
+         * throughout the function.
+         * 
+         * Brainwave:
+         * This is all a lot easier if we have a general purpose 
+         * Mage::getCalculator() that wraps Zend_Locale_Math, but is a 
+         * singleton.
+         * It will be possible to set the scale in the calculator and be sure 
+         * all calculations use the same scale. This could be a system/config 
+         * value (at the store level).
+         */
+        if( ! Zend_Locale_Math::isBcmathDisabled() )
+            Zend_Locale_Math::$scale(4);
+        $taxRate = Zend_Locale_Math::Div($taxRate, 100);
 
         if ($priceIncludeTax) {
-            $amount = $price * (1 - 1 / (1 + $taxRate));
+            //$amount = $price * (1 - 1 / (1 + $taxRate));
+            $amount = Zend_Locale_Math::Mul($price,
+                Zend_Locale_Math::Sub(
+                    1,
+                    Zend_Locale_Math::Div(
+                        1,
+                        Zend_Locale_Math(
+                            1,
+                            $taxRate
+                        )
+                    )
+                )
+            );
         } else {
-            $amount = $price * $taxRate;
+            $amount = Zend_Locale_Math::Mul($price, $taxRate);
         }
 
         if ($round) {
             return $this->round($amount);
         }
 
+        if( ! Zend_Locale_Math::isBcmathDisabled() )
+            Zend_Locale_Math::$scale(0);
         return $amount;
     }
 

@@ -619,13 +619,18 @@ class Mage_Tax_Model_Calculation extends Mage_Core_Model_Abstract
      *
      * @param   float $price
      * @param   int $precision
-     * @return  float
+     * @return  string
      */
     public function truncate($price, $precision = 4)
     {
-        $exp = pow(10, $precision);
-        $price = floor($price * $exp) / $exp;
-        return $price;
+        $stack = debug_backtrace(false);
+        $caller = $stack[1]['class'] . '::' . $stack[1]['function'];
+        unset($stack);
+        $msg = sprintf('%s::%s called by %s with price %f, precision %d',
+            __CLASS__, __METHOD__, $caller, $price, $precision);
+        Mage::Log($msg);
+        // yuck, but will do for now.
+        return Zend_Locale_Math::Add($price, 0, $precision);
     }
 
     /**
@@ -642,22 +647,32 @@ class Mage_Tax_Model_Calculation extends Mage_Core_Model_Abstract
     /**
      * Round price up
      *
-     * @param   float $price
-     * @return  float
+     * @param   mixed $price
+     * @return  string
      */
     public function roundUp($price)
     {
-        return ceil($price * 100) / 100;
+        /*
+         * Since this is supposed to be used for prices, yet we don't know real 
+         * precision of the number, we shall assume that only cents are 
+         * relevant. We can therefore add 0.005 to $price and call round.
+         * The same was done in the previous implementation, by multiplying and 
+         * subsequently dividing by 100.
+         */
+        $price = Zend_Locale_Math::Add($price, '0.005', 3);
+        return Mage::app()->getStore()->roundPrice($price);
     }
 
     /**
      * Round price down
      *
-     * @param   float $price
-     * @return  float
+     * @param   mixed $price
+     * @return  string
+     * @see     roundUp()
      */
     public function roundDown($price)
     {
-        return floor($price * 100) / 100;
+        $price = Zend_Locale_Math::Sub($price, '0.005', 3);
+        return Mage::app()->getStore()->roundPrice($price);
     }
 }
